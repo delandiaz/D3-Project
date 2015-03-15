@@ -1,8 +1,7 @@
 chart("data.csv", "orange");
-
+var colorTracker = 0;
 var datearray = [];
 var colorrange = [];
-
 
 function chart(csvpath, color) {
 
@@ -24,13 +23,13 @@ var width = document.body.clientWidth - margin.left - margin.right;
 var height = 450 - margin.top - margin.bottom;
 
 var tooltip = d3.select("body")
-    .append("div")
-    .attr("class", "remove")
-    .style("position", "absolute")
-    .style("z-index", "20") // z-index or "bring-to-top"
-    .style("visibility", "visible") //"visible" was originally "hidden"
-    .style("top", "75px") //height of tooltip
-    .style("left", "100px");
+        .append("div")
+        .attr("id", "tooptip_content")
+        .style("position", "absolute")
+        .style("z-index", "20") // z-index or "bring-to-top"
+        .style("visibility", "visible") //"visible" was originally "hidden"
+        .attr("font-size", "20px")
+        .style("color", "black");
 
 var x = d3.time.scale()
     .range([0, width]);
@@ -41,10 +40,15 @@ var y = d3.scale.linear()
 var z = d3.scale.ordinal()
     .range(colorrange);
 
+//Custom axis scale
+var axisScale = d3.scale.linear()
+                        .domain([2005,2014])
+                        .range([0,width]);
+    
 var xAxis = d3.svg.axis()
-    .scale(x)
+    .scale(axisScale)
     .orient("bottom")
-    .ticks(d3.time.years);
+    .tickFormat(d3.format("d"));
 
 var yAxis = d3.svg.axis()
     .scale(y);
@@ -76,7 +80,11 @@ var svg = d3.select(".chart").append("svg")
 var graph = d3.csv(csvpath, function(data) {
   data.forEach(function(d) {
     d.date = format.parse(d.date);
-    d.value = +d.value;
+    d.value = d3.round(+d.value, 3);
+    d.genre = d. genre;
+    d.total = d3.round(d.total, 3);
+    d.company = d. company;
+    d.console = d. console;
   });
 
   var layers = stack(nest.entries(data));
@@ -85,103 +93,175 @@ var graph = d3.csv(csvpath, function(data) {
   y.domain([0, d3.max(data, function(d) { return d.y0 + d.y; })]);
 
   svg.selectAll(".layer")
-      .data(layers)
-    .enter().append("path")
-      .attr("class", "layer")
-      .attr("d", function(d) { return area(d.values); })
-      .style("fill", function(d, i) { return z(i); });
-
+            .data(layers)
+            .enter().append("path")
+            .attr("class", "layer")
+            .attr("d", function(d) { return area(d.values); })
+            //.style("fill", function(d, i) { return z(i); });   
+            .attr("stroke", "#DCDCDC")
+            .style("fill", function(d, i) {
+                if (d.values[1].total <= 1) {
+                    return z(0);
+                }
+                else if (d.values[1].total <= 2) {
+                    return z(1);
+                }
+                else if (d.values[1].total > 2 && d.values[1].total <= 5) {
+                    return z(2);
+                }
+                else if (d.values[1].total <= 10) {
+                    return z(3);
+                }
+                else if (d.values[1].total <= 20) {
+                    return z(4);
+                }
+                else return z(5);
+            });  
 
   svg.append("g")
-      .attr("class", "x axis")
-      .attr("transform", "translate(0," + height + ")")
-      .call(xAxis)
-      .append("text")
-      .attr("class", "label")
-      .attr("y", 40)
-      .attr("x", width/2)
-      .style("text-anchor", "end")
-      .attr("font-size", "16px")
-      .text("Years");
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis)
+            .append("text")
+            .attr("class", "label")
+            .attr("y", 40)
+            .attr("x", width/2)
+            .style("text-anchor", "end")
+            .attr("font-size", "16px")
+            .text("Years"); 
+
+        svg.append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(" + width + ", 0)")
+            .call(yAxis.orient("right"));
+        
+        svg.append("g")
+            .attr("class", "y axis")
+            .call(yAxis.orient("left"))
+            .append("text")
+            .attr("class", "label")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -40)
+            .attr("x", -130)
+            .style("text-anchor", "end")
+            .attr("font-size", "16px")
+            .text("Revenue in Millions of USD"); 
+        
+    svg.selectAll(".layer")
+        .attr("opacity", 1)
+        .on("mouseover", function(d, i) {
+            d3.select(this)
+            .transition()
+            //.duration(250)
+            .attr("opacity", '0.4')})
     
-  svg.append("g")
-      .attr("class", "y axis")
-      .attr("transform", "translate(" + width + ", 0)")
-      .call(yAxis.orient("right"));
+            .on("mousemove", function(d, i) {
+                mousex = d3.mouse(this);
+                mousex = mousex[0];
+                var invertedx = x.invert(mousex);
+                invertedx = invertedx.getMonth() + invertedx.getDate();
+                var selected = (d.values);
+                for (var k = 0; k < selected.length; k++) {
+                    datearray[k] = selected[k].date
+                    datearray[k] = datearray[k].getMonth() + datearray[k].getDate();
+                }
 
-  svg.append("g")
-      .attr("class", "y axis")
-      .call(yAxis.orient("left"))
-      .append("text")
-      .attr("class", "label")
-      .attr("transform", "rotate(-90)")
-      .attr("y", -40)
-      .attr("x", -130)
-      .style("text-anchor", "end")
-      .attr("font-size", "16px")
-      .text("Revenue in Millions of USD");
+                mousedate = datearray.indexOf(invertedx);
+                pro = d.values[mousedate].value;
 
+                d3.select(this)
+                    .classed("hover", true)
+                    .attr("opacity", "0.4")
+                    .attr("stroke-width", "0.5px"),
+                    tooltip.html( "<h4>" + d.key + "<br>" + "Genre: " + d.values[mousedate].genre + "<br>" + "Company: " + d.values[mousedate].company + "<br>" + "Console: " + d.values[mousedate].console + "<br>" + "Annual Revenue: " + pro + " million USD" + "<br>" + "Total Revenue: " + d.values[mousedate].total + " million USD" + "<br>" + "</h4>" ).style("visibility", "visible");
 
-  svg.selectAll(".layer")
-    .attr("opacity", 1)
-    .on("mouseover", function(d, i) {
-      svg.selectAll(".layer").transition()
-      .duration(250)
-      .attr("opacity", function(d, j) {
-        return j != i ? 0.6 : 1;
-    })})
-
-    .on("mousemove", function(d, i) {
-      mousex = d3.mouse(this);
-      mousex = mousex[0];
-      var invertedx = x.invert(mousex);
-      invertedx = invertedx.getMonth() + invertedx.getDate();
-      var selected = (d.values);
-      for (var k = 0; k < selected.length; k++) {
-        datearray[k] = selected[k].date
-        datearray[k] = datearray[k].getMonth() + datearray[k].getDate();
-      }
-
-      mousedate = datearray.indexOf(invertedx);
-      pro = d.values[mousedate].value;
-      d3.select(this)
-      .classed("hover", true)
-      .attr("stroke", strokecolor)
-      .attr("stroke-width", "0.5px"), 
-      tooltip.html( "<p>" + d.key + "<br>" + pro + " million USD" + "</p>" ).style("visibility", "visible");
-      
     })
-    .on("mouseout", function(d, i) {
-     svg.selectAll(".layer")
-      .transition()
-      .duration(250)
-      .attr("opacity", "1");
-      d3.select(this)
-      .classed("hover", false)
-      .attr("stroke-width", "0px"), tooltip.html( "<p>" + d.key + "<br>" + pro + " million USD" + "</p>" ).style("visibility", "visible"); //"visible" was originally "hidden"
-  })
-    
-  var vertical = d3.select(".chart")
-        .append("div")
-        .attr("class", "remove")
-        .style("position", "absolute")
-        .style("z-index", "19")
-        .style("width", "1px")
-        .style("height", "405px")
-  //Change this variable to adjust the height of the dynamic white line.
-        .style("top", "75px")
-        .style("bottom", "30px")
-        .style("left", "0px")
-        .style("background", "#fff");
 
-  d3.select(".chart")
-      .on("mousemove", function(){  
-         mousex = d3.mouse(this);
-         mousex = mousex[0] + 5;
-         vertical.style("left", mousex + "px" )})
-      .on("mouseover", function(){  
-         mousex = d3.mouse(this);
-         mousex = mousex[0] + 5;
-         vertical.style("left", mousex + "px")});
-});
+            .on("mouseout", function(d, i) {
+                svg.selectAll(".layer")
+                    .transition()
+                    .duration(250)
+                    //.attr('stroke', '#DCDCDC')
+                    //.attr('stroke-width', '1px')
+                    .attr("opacity", "1")
+                    d3.select(this)
+                       .classed("hover", false)
+                        .attr("opacity", "1")
+                        .attr("stroke-width", "1px"),
+                        tooltip.html( "<h4>" + d.key + "<br>" + "Genre: " + d.values[mousedate].genre + "<br>" + "Company: " + d.values[mousedate].company + "<br>" + "Console: " + d.values[mousedate].console + "<br>" + "Annual Revenue: " + pro + " million USD" + "<br>" + "Total Revenue: " + d.values[mousedate].total + " million USD" + "<br>" + "</h4>" ).style("visibility", "hidden");
+  });
+
+        var vertical = d3.select(".chart")
+            .append("div")
+            .attr("class", "remove")
+            .style("position", "absolute")
+            .style("z-index", "19")
+            .style("width", "1px")
+            .style("height", "405px")
+            //Change this variable to adjust the height of the dynamic white line.
+            .style("top", "75px")
+            .style("bottom", "30px")
+            .style("left", "0px")
+            .style("background", "#fff");
+
+    d3.select(".chart")
+        .on("mousemove", function(){
+                mousex = d3.mouse(this);
+                mousex = mousex[0] + 5;
+                vertical.style("left", mousex + "px" )})
+        .on("mouseover", function(){
+                mousex = d3.mouse(this);
+                mousex = mousex[0] + 5;
+                vertical.style("left", mousex + "px")});
+    });
 }
+
+// ** Update data section (Called from the onclick)
+function updateData() {
+
+    
+    if(colorTracker === 0){
+        chart("data.csv", "genre");
+        colorTracker = 1;
+    }else if(colorTracker === 1){
+        chart("data.csv", "orange");
+        colorTracker = 0;
+    }
+        
+
+}
+
+/*
+if(color === "genre"){
+                    
+                    if (d.values[1].genre === "simulation") {
+                        return "#A6CEE3";
+                    }
+                    else if (d.values[1].genre === "Platform") {
+                        return "#33A02C";
+                    }
+                    else if (d.values[1].genre === "Action" || d.values[1].genre === "Adventure") {
+                        return "#1F78B4";
+                    }
+                    else if (d.values[1].genre === "Shooter") {
+                        return "#E31A1C";
+                    }
+                    else if (d.values[1].genre === "Sports" || d.values[1].genre === "Racing") {
+                        return "#FDBF6F";
+                    }
+                    else if (d.values[1].genre === "Role-Playing") {
+                        return "#FF7F00";
+                    }
+                    else if (d.values[1].genre === "Educational" || d.values[1].genre === "Puzzle") {   
+                        return "#6A3D9A";
+                    }
+                    else if (d.values[1].genre === "Misc") {
+                        return "#FFFF99";
+                    }
+                    else if (d.values[1].genre === "Fighting") {
+                        return "#B15928";
+                    }
+                    else return "#8DD3C7";
+                    
+                }
+*/

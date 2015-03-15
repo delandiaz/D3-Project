@@ -5,12 +5,34 @@
         <meta charset="utf-8">
         <title>Revenue of Best Sold Video Games</title>
         <link rel="stylesheet" type="text/css" href="style.css">
-        <script type= "text/javascript" src="http://d3js.org/d3.v3.min.js"></script>   
+        <script type= "text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
     </head>
     <body>
-        <h1 style = "text-align:center; color:steelblue"><bold> Revenue of Best Sold Video Games </bold></h1>
+        <h1> Revenue of Best Sold Video Games</h1>
+                <div id="genreButton">
+            <input name="updateButton" 
+                type="button" 
+                value="Filter by Genre" 
+                onclick="updateData()" />
+        </div>
         <div class="chart"></div>
         <script type="text/javascript" src="streamgraph.js"></script>
+        <div id="d3_content">
+            <!-- NOT COMPLETED YET --------------
+<svg style="width: 100%; color: white;">
+    <text x="82%" y="35" font-family="sans-serif" font-size="100px" stroke="white" fill="#FFFFFF">< $1 million</text><rect x="90%" y="20" width="25" height="25" fill="#B30000"/>
+                    <text x="82%" y="35" font-family="sans-serif" font-size="100px" stroke="white" fill="#FFFFFF">< $1 million</text><rect x="90%" y="45" width="25" height="25" fill="#E34A33"/>
+                    <text x="82%" y="35" font-family="sans-serif" font-size="100px" stroke="white" fill="#FFFFFF">< $1 million</text><rect x="90%" y="70" width="25" height="25" fill="#FC8D59"/>
+        
+            <rect x="90%" y="95" width="25" height="25" fill="#FDBB84"/>  
+            
+            <rect x="90%" y="120" width="25" height="25" fill="#FEF0D9"/> 
+        </svg>
+   --------------------------------------->
+            <br/><br/><br/><br/><br/><br/><br/><br/>
+            Here's our beginning text.
+        </div>
+        <div id="required_content">
         <h4>Created by: Evan Morrison, Brian Lee, Kelsey Coffman, Delan Diaz</h4>
         <h4>CMPS 165 - Data Programming for Visualization - Winter 2015 - Instructor: Suresh K. Lodha</h4>
         <h4>Files Submitted:</h4>
@@ -23,8 +45,9 @@
         <h4>References:</h4>
         <ul>
           <li><a href="http://bl.ocks.org/WillTurman/4631136">Will Turman’s D3 Interactive Streamgraph</a></li>
-        </ul>
-        <h4>“Good Artists imitate, Great Artists Steal” – Steve Jobs</h4>
-        
+          <li><a href="http://www.vgchartz.com/">Video Game Charts &amp; Game Sales Data</a></li>
+            <li><a href="http://www.nytimes.com/interactive/2008/02/23/movies/20080223_REVENUE_GRAPHIC.html?_r=0">The Ebb and Flow of Movies</a></li>
+        </ul>    
+            </div>
     </body>
 </html>
